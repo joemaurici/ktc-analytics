@@ -1,0 +1,1345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KidsTimerCo · Analytics</title>
+<style>
+  :root {
+    --bg:        #0d0f14;
+    --surface:   #151821;
+    --border:    #252a38;
+    --accent:    #f5c518;
+    --accent2:   #4fd1c5;
+    --text:      #e8eaf0;
+    --muted:     #7a8099;
+    --danger:    #fc5c5c;
+    --success:   #56d98e;
+    --radius:    12px;
+    --font:      'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --mono:      'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  /* ── Header ── */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 18px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo-icon {
+    width: 32px;
+    height: 32px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+  }
+
+  .logo-text {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+  }
+
+  .logo-sub {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 400;
+  }
+
+  /* ── Main layout ── */
+  main {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 32px 20px 60px;
+  }
+
+  /* ── Setup panel ── */
+  #setup-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 32px;
+    margin-bottom: 24px;
+  }
+
+  #setup-panel h2 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: var(--accent);
+  }
+
+  #setup-panel p {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 20px;
+  }
+
+  .input-group {
+    margin-bottom: 16px;
+  }
+
+  label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 6px;
+  }
+
+  input[type="text"] {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 12px 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  input[type="text"]:focus {
+    border-color: var(--accent);
+  }
+
+  input[type="text"]::placeholder {
+    color: var(--muted);
+    opacity: 0.5;
+  }
+
+  /* ── Buttons ── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 22px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: opacity 0.15s, transform 0.1s;
+    text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .btn:active { transform: scale(0.97); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #0d0f14;
+    width: 100%;
+    padding: 14px;
+    font-size: 15px;
+  }
+
+  .btn-secondary {
+    background: var(--border);
+    color: var(--text);
+  }
+
+  .btn-danger {
+    background: transparent;
+    color: var(--danger);
+    border: 1px solid var(--danger);
+    padding: 8px 14px;
+    font-size: 12px;
+  }
+
+  .btn-export {
+    background: var(--accent2);
+    color: #0d0f14;
+    width: 100%;
+    padding: 14px;
+    font-size: 15px;
+    margin-top: 8px;
+  }
+
+  /* status-bar layout handled via inline styles on element */
+
+  .status-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+  }
+
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--success);
+    flex-shrink: 0;
+  }
+
+  .status-dot.loading {
+    animation: pulse 1s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* ── Date range picker ── */
+  #date-controls {
+    display: none;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 24px;
+  }
+
+  .date-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+  }
+
+  .date-row .input-group {
+    flex: 1;
+    min-width: 140px;
+    margin-bottom: 0;
+  }
+
+  .range-presets {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+
+  .preset-btn {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .preset-btn.active, .preset-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* ── Progress ── */
+  #progress-panel {
+    display: none;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 24px;
+  }
+
+  .progress-title {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: var(--accent);
+  }
+
+  .progress-step {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    font-size: 13px;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .progress-step:last-child { border-bottom: none; }
+  .progress-step.done { color: var(--success); }
+  .progress-step.active { color: var(--text); }
+  .progress-step.error { color: var(--danger); }
+
+  .step-icon { font-size: 16px; width: 20px; text-align: center; }
+
+  /* ── Results ── */
+  #results-panel {
+    display: none;
+  }
+
+  .section-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+
+  .section-title {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* ── Stats grid ── */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  @media (min-width: 600px) {
+    .stats-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+
+  .stat-cell {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+  }
+
+  .stat-label {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 6px;
+  }
+
+  .stat-value {
+    font-size: 22px;
+    font-weight: 700;
+    font-family: var(--mono);
+    line-height: 1;
+  }
+
+  .stat-value.green { color: var(--success); }
+  .stat-value.yellow { color: var(--accent); }
+  .stat-value.teal { color: var(--accent2); }
+
+  /* ── Data table ── */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+
+  .data-table th {
+    text-align: left;
+    padding: 8px 10px;
+    color: var(--muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .data-table td {
+    padding: 10px 10px;
+    border-bottom: 1px solid var(--border);
+    font-family: var(--mono);
+    vertical-align: top;
+  }
+
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+  .td-title {
+    font-family: var(--font);
+    font-size: 12px;
+    line-height: 1.4;
+    color: var(--text);
+    max-width: 200px;
+    word-break: break-word;
+  }
+
+  .td-num { color: var(--accent2); text-align: right; }
+  .td-rev { color: var(--success); text-align: right; }
+  .td-ctr { color: var(--accent); text-align: right; }
+
+  /* ── Timeline chart ── */
+  .chart-wrap {
+    height: 120px;
+    position: relative;
+    margin-top: 8px;
+  }
+
+  canvas { width: 100% !important; }
+
+  /* ── Export area ── */
+  #export-panel {
+    display: none;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+
+  .export-textarea {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 14px;
+    line-height: 1.6;
+    height: 240px;
+    resize: vertical;
+    outline: none;
+  }
+
+  .export-note {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 12px;
+    line-height: 1.5;
+  }
+
+  /* ── Error box ── */
+  .error-box {
+    background: rgba(252, 92, 92, 0.1);
+    border: 1px solid rgba(252, 92, 92, 0.3);
+    border-radius: 8px;
+    padding: 14px 16px;
+    font-size: 13px;
+    color: var(--danger);
+    line-height: 1.5;
+    margin-top: 12px;
+  }
+
+  .hidden { display: none !important; }
+
+  /* ── Scrollable table wrapper ── */
+  .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  /* ── Traffic source bar ── */
+  .source-bar-wrap { margin-top: 4px; }
+  .source-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+    font-size: 12px;
+  }
+  .source-label { flex: 0 0 140px; color: var(--muted); font-size: 11px; }
+  .source-track {
+    flex: 1;
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .source-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: var(--accent2);
+    transition: width 0.6s ease;
+  }
+  .source-pct {
+    flex: 0 0 36px;
+    text-align: right;
+    color: var(--accent2);
+    font-family: var(--mono);
+    font-size: 11px;
+  }
+
+  /* ── Footer ── */
+  footer {
+    text-align: center;
+    font-size: 11px;
+    color: var(--muted);
+    padding: 24px;
+    border-top: 1px solid var(--border);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">⏱</div>
+    <div>
+      <div class="logo-text">KidsTimerCo</div>
+      <div class="logo-sub">Analytics Dashboard</div>
+    </div>
+  </div>
+  <div id="auth-status-header" style="font-size:12px;color:var(--muted);"></div>
+</header>
+
+<main>
+
+  <!-- ── SETUP PANEL ── -->
+  <div id="setup-panel">
+    <h2>Connect YouTube Analytics</h2>
+    <p>Enter your Google OAuth Client ID below, then tap Connect. Your credentials stay in this browser only — nothing is sent anywhere else.</p>
+
+    <div class="input-group">
+      <label>OAuth Client ID</label>
+      <input type="text" id="client-id-input"
+        placeholder="xxxxxxxxxxxx-xxxxxxxxxxxxxxxxxxxxxxxx.apps.googleusercontent.com"
+        autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+    </div>
+
+    <div id="error-box" class="error-box hidden"></div>
+
+    <button class="btn btn-primary" onclick="startAuth()" style="margin-top:8px;">
+      🔗 Connect with Google
+    </button>
+  </div>
+
+  <!-- ── STATUS BAR ── -->
+  <div id="status-bar" class="hidden" style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 20px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; gap: 12px;"><div class="status-info">
+      <div class="status-dot" id="status-dot"></div>
+      <span id="status-text">Connected</span>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-danger" onclick="disconnect()">Disconnect</button>
+    </div>
+  </div>
+
+  <!-- ── DATE CONTROLS ── -->
+  <div id="date-controls" class="hidden">
+    <div class="range-presets">
+      <button class="preset-btn active" onclick="setPreset(28, this)">Last 28 days</button>
+      <button class="preset-btn" onclick="setPreset(90, this)">90 days</button>
+      <button class="preset-btn" onclick="setPreset(180, this)">6 months</button>
+      <button class="preset-btn" onclick="setPreset(365, this)">1 year</button>
+    </div>
+    <div class="date-row">
+      <div class="input-group">
+        <label>Start Date</label>
+        <input type="text" id="start-date" placeholder="YYYY-MM-DD">
+      </div>
+      <div class="input-group">
+        <label>End Date</label>
+        <input type="text" id="end-date" placeholder="YYYY-MM-DD">
+      </div>
+      <button class="btn btn-primary" onclick="fetchAll()" style="width:auto;padding:12px 20px;margin-bottom:0;">
+        Pull Data
+      </button>
+    </div>
+  </div>
+
+  <!-- ── PROGRESS ── -->
+  <div id="progress-panel" class="hidden">
+    <div class="progress-title">Fetching analytics…</div>
+    <div id="progress-steps"></div>
+  </div>
+
+  <!-- ── RESULTS ── -->
+  <div id="results-panel" class="hidden">
+
+    <!-- Channel overview -->
+    <div class="section-card">
+      <div class="section-title">📊 Channel Overview</div>
+      <div class="stats-grid" id="channel-stats"></div>
+    </div>
+
+    <!-- Views timeline -->
+    <div class="section-card">
+      <div class="section-title">📈 Views Over Time</div>
+      <div class="chart-wrap">
+        <canvas id="views-chart"></canvas>
+      </div>
+    </div>
+
+    <!-- Top videos -->
+    <div class="section-card">
+      <div class="section-title">🎬 Top Videos (by views)</div>
+      <div class="table-scroll">
+        <table class="data-table" id="top-videos-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Title</th>
+              <th style="text-align:right">Views</th>
+              <th style="text-align:right">Watch (min)</th>
+              <th style="text-align:right">Avg %</th>
+              <th style="text-align:right">Revenue</th>
+            </tr>
+          </thead>
+          <tbody id="top-videos-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Traffic sources -->
+    <div class="section-card">
+      <div class="section-title">🚦 Traffic Sources</div>
+      <div class="source-bar-wrap" id="traffic-sources"></div>
+    </div>
+
+    <!-- Geography -->
+    <div class="section-card">
+      <div class="section-title">🌏 Top Countries</div>
+      <div class="table-scroll">
+        <table class="data-table" id="geo-table">
+          <thead>
+            <tr>
+              <th>Country</th>
+              <th style="text-align:right">Views</th>
+              <th style="text-align:right">Watch (min)</th>
+            </tr>
+          </thead>
+          <tbody id="geo-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Revenue -->
+    <div class="section-card">
+      <div class="section-title">💰 Revenue Breakdown</div>
+      <div class="stats-grid" id="revenue-stats"></div>
+    </div>
+
+  </div>
+
+  <!-- ── EXPORT ── -->
+  <div id="export-panel" class="hidden">
+    <div class="section-title" style="color:var(--accent2);">📋 Export for Claude</div>
+    <textarea class="export-textarea" id="export-text" readonly></textarea>
+    <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;">
+      <button class="btn btn-export" onclick="copyExport(event)">📋 Copy to Clipboard</button>
+    </div>
+    <p class="export-note">Copy this text and paste it into a new Claude conversation. It contains all the channel analytics in a structured format Claude can interpret for strategy, scheduling, and content decisions.</p>
+  </div>
+
+</main>
+
+<footer>KidsTimerCo Analytics v3 — data stays in your browser · No tracking</footer>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════════════
+// Capture hash at parse time — Android can lose it before 'load' fires
+const _INITIAL_HASH = window.location.hash.substring(1);
+
+let accessToken = null;
+let tokenExpiry  = null;
+let channelId    = null;
+let analyticsData = {};
+
+// ═══════════════════════════════════════════════════════════════
+//  AUTH
+// ═══════════════════════════════════════════════════════════════
+function startAuth() {
+  const clientId = document.getElementById('client-id-input').value.trim();
+  if (!clientId) {
+    showError('Please enter your OAuth Client ID first.');
+    return;
+  }
+  if (!clientId.endsWith('.apps.googleusercontent.com')) {
+    showError('That doesn\'t look like a valid Client ID. It should end with .apps.googleusercontent.com');
+    return;
+  }
+
+  // Store client ID for after redirect
+  sessionStorage.setItem('ytClientId', clientId);
+
+  const redirectUri = window.location.href.split('?')[0].split('#')[0];
+  const scopes = [
+    'https://www.googleapis.com/auth/yt-analytics.readonly',
+    'https://www.googleapis.com/auth/yt-analytics-monetary.readonly',
+    'https://www.googleapis.com/auth/youtube.readonly'
+  ].join(' ');
+
+  const state = Math.random().toString(36).substring(2);
+  sessionStorage.setItem('oauthState', state);
+
+  const params = new URLSearchParams({
+    client_id: clientId,
+    redirect_uri: redirectUri,
+    response_type: 'token',
+    scope: scopes,
+    state: state,
+    include_granted_scopes: 'true'
+  });
+
+  window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params}`;
+}
+
+function handleCallback() {
+  // Use hash captured at script parse time — more reliable on Android
+  const hash = _INITIAL_HASH || window.location.hash.substring(1);
+  if (!hash) return false;
+
+  const params = new URLSearchParams(hash);
+  const token  = params.get('access_token');
+  const state  = params.get('state');
+  const error  = params.get('error');
+
+  if (error) {
+    showError(`Google auth error: ${error}`);
+    return true;
+  }
+
+  if (!token) return false;
+
+  // Validate state
+  const savedState = sessionStorage.getItem('oauthState');
+  if (state && savedState && state !== savedState) {
+    showError('Security error: state mismatch. Please try again.');
+    return true;
+  }
+
+  const expiresIn = parseInt(params.get('expires_in') || '3600');
+  accessToken = token;
+  tokenExpiry = Date.now() + (expiresIn * 1000);
+
+  // Clean URL
+  history.replaceState(null, '', window.location.pathname);
+  return true;
+}
+
+function isTokenValid() {
+  return accessToken && Date.now() < (tokenExpiry - 60000);
+}
+
+function disconnect() {
+  accessToken = null;
+  tokenExpiry = null;
+  channelId = null;
+  analyticsData = {};
+  sessionStorage.removeItem('ytClientId');
+
+  document.getElementById('setup-panel').classList.remove('hidden');
+  document.getElementById('status-bar').classList.add('hidden');
+  document.getElementById('date-controls').classList.add('hidden');
+  document.getElementById('results-panel').classList.add('hidden');
+  document.getElementById('export-panel').classList.add('hidden');
+  document.getElementById('progress-panel').classList.add('hidden');
+  document.getElementById('auth-status-header').textContent = '';
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  DATE HELPERS
+// ═══════════════════════════════════════════════════════════════
+function toYMD(date) {
+  return date.toISOString().split('T')[0];
+}
+
+function daysAgo(n) {
+  const d = new Date();
+  d.setDate(d.getDate() - n);
+  return toYMD(d);
+}
+
+function setPreset(days, el) {
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('end-date').value   = daysAgo(1);
+  document.getElementById('start-date').value = daysAgo(days);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  API CALLS
+// ═══════════════════════════════════════════════════════════════
+async function apiGet(url) {
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${accessToken}` }
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body?.error?.message || `HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+async function ytAnalytics(params) {
+  const base = 'https://youtubeanalytics.googleapis.com/v2/reports';
+  const qp = new URLSearchParams({ ids: 'channel==MINE', ...params });
+  return apiGet(`${base}?${qp}`);
+}
+
+async function ytData(resource, params) {
+  const base = `https://www.googleapis.com/youtube/v3/${resource}`;
+  const qp = new URLSearchParams(params);
+  return apiGet(`${base}?${qp}`);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  FETCH PIPELINE
+// ═══════════════════════════════════════════════════════════════
+const STEPS = [
+  { id: 'channel',   label: 'Channel identity & subscriber count' },
+  { id: 'overview',  label: 'Channel overview metrics' },
+  { id: 'timeline',  label: 'Daily views timeline' },
+  { id: 'topvideos', label: 'Top 20 videos' },
+  { id: 'traffic',   label: 'Traffic sources' },
+  { id: 'geo',       label: 'Geography breakdown' },
+  { id: 'revenue',   label: 'Revenue & monetisation' },
+];
+
+function renderSteps() {
+  const container = document.getElementById('progress-steps');
+  container.innerHTML = STEPS.map(s =>
+    `<div class="progress-step" id="step-${s.id}">
+      <span class="step-icon">⬜</span>
+      <span>${s.label}</span>
+    </div>`
+  ).join('');
+}
+
+function setStep(id, state) { // state: active | done | error
+  const el = document.getElementById(`step-${id}`);
+  if (!el) return;
+  el.className = `progress-step ${state}`;
+  const icons = { active: '🔄', done: '✅', error: '❌' };
+  el.querySelector('.step-icon').textContent = icons[state] || '⬜';
+}
+
+async function fetchAll() {
+  if (!isTokenValid()) {
+    showError('Session expired. Please reconnect.');
+    return;
+  }
+
+  const startDate = document.getElementById('start-date').value;
+  const endDate   = document.getElementById('end-date').value;
+
+  if (!startDate || !endDate) {
+    alert('Please set a date range.');
+    return;
+  }
+
+  // Show progress, hide results
+  document.getElementById('progress-panel').classList.remove('hidden');
+  document.getElementById('results-panel').classList.add('hidden');
+  document.getElementById('export-panel').classList.add('hidden');
+  renderSteps();
+
+  const setDot = (loading) => {
+    document.getElementById('status-dot').className = 'status-dot' + (loading ? ' loading' : '');
+  };
+  setDot(true);
+
+  try {
+    // ── 1. Channel info ──
+    setStep('channel', 'active');
+    const chanData = await ytData('channels', {
+      part: 'snippet,statistics',
+      mine: true
+    });
+    const chan = chanData.items?.[0];
+    channelId = chan?.id;
+    const chanSnippet = chan?.snippet || {};
+    const chanStats   = chan?.statistics || {};
+    analyticsData.channel = {
+      name: chanSnippet.title,
+      id: channelId,
+      description: chanSnippet.description?.substring(0, 200),
+      subscriberCount: parseInt(chanStats.subscriberCount || 0),
+      videoCount: parseInt(chanStats.videoCount || 0),
+      totalViewCount: parseInt(chanStats.viewCount || 0),
+    };
+    setStep('channel', 'done');
+
+    // ── 2. Overview metrics ──
+    setStep('overview', 'active');
+    const overview = await ytAnalytics({
+      startDate, endDate,
+      metrics: 'views,estimatedMinutesWatched,averageViewDuration,averageViewPercentage,subscribersGained,subscribersLost,likes,comments,shares',
+    });
+    const ov = rowToObj(overview);
+    analyticsData.overview = ov;
+    setStep('overview', 'done');
+
+    // ── 3. Timeline ──
+    setStep('timeline', 'active');
+    const timeline = await ytAnalytics({
+      startDate, endDate,
+      dimensions: 'day',
+      metrics: 'views,estimatedMinutesWatched',
+      sort: 'day'
+    });
+    analyticsData.timeline = timeline;
+    setStep('timeline', 'done');
+
+    // ── 4. Top videos ──
+    setStep('topvideos', 'active');
+    const topVids = await ytAnalytics({
+      startDate, endDate,
+      dimensions: 'video',
+      metrics: 'views,estimatedMinutesWatched,averageViewDuration,averageViewPercentage,estimatedRevenue',
+      sort: '-views',
+      maxResults: 20
+    });
+
+    // Get video titles from Data API
+    const videoIds = (topVids.rows || []).map(r => r[0]).filter(Boolean).slice(0, 20);
+    let videoTitles = {};
+    if (videoIds.length > 0) {
+      const vData = await ytData('videos', {
+        part: 'snippet',
+        id: videoIds.join(',')
+      });
+      (vData.items || []).forEach(v => {
+        videoTitles[v.id] = v.snippet?.title || v.id;
+      });
+    }
+    analyticsData.topVideos = { data: topVids, titles: videoTitles };
+    setStep('topvideos', 'done');
+
+    // ── 5. Traffic sources ──
+    setStep('traffic', 'active');
+    const traffic = await ytAnalytics({
+      startDate, endDate,
+      dimensions: 'insightTrafficSourceType',
+      metrics: 'views',
+      sort: '-views'
+    });
+    analyticsData.traffic = traffic;
+    setStep('traffic', 'done');
+
+    // ── 6. Geography ──
+    setStep('geo', 'active');
+    const geo = await ytAnalytics({
+      startDate, endDate,
+      dimensions: 'country',
+      metrics: 'views,estimatedMinutesWatched',
+      sort: '-views',
+      maxResults: 15
+    });
+    analyticsData.geo = geo;
+    setStep('geo', 'done');
+
+    // ── 7. Revenue ──
+    setStep('revenue', 'active');
+    let revenueData = null;
+    try {
+      revenueData = await ytAnalytics({
+        startDate, endDate,
+        metrics: 'estimatedRevenue,estimatedAdRevenue,grossRevenue,cpm,playbackBasedCpm,adImpressions,monetizedPlaybacks',
+      });
+      analyticsData.revenue = rowToObj(revenueData);
+    } catch(e) {
+      // Revenue scope may not be granted
+      analyticsData.revenue = null;
+    }
+    setStep('revenue', 'done');
+
+    // ── Render ──
+    setDot(false);
+    document.getElementById('progress-panel').classList.add('hidden');
+    renderResults(startDate, endDate);
+
+  } catch(err) {
+    setDot(false);
+    showError(`Fetch error: ${err.message}`);
+    console.error(err);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  RENDER
+// ═══════════════════════════════════════════════════════════════
+function rowToObj(apiResp) {
+  if (!apiResp?.columnHeaders || !apiResp?.rows?.[0]) return {};
+  const obj = {};
+  apiResp.columnHeaders.forEach((h, i) => {
+    obj[h.name] = apiResp.rows[0][i];
+  });
+  return obj;
+}
+
+function fmt(n, decimals=0) {
+  if (n == null || isNaN(n)) return '—';
+  if (n >= 1000000) return (n/1000000).toFixed(1) + 'M';
+  if (n >= 1000) return (n/1000).toFixed(1) + 'K';
+  return Number(n).toFixed(decimals).toString();
+}
+
+function fmtMins(mins) {
+  if (mins == null || isNaN(mins)) return '—';
+  if (mins >= 60) return (mins/60).toFixed(1) + 'h';
+  return Math.round(mins) + 'm';
+}
+
+function fmtCurrency(val) {
+  if (val == null || isNaN(val)) return '—';
+  return '$' + Number(val).toFixed(2);
+}
+
+function fmtSecs(s) {
+  if (s == null || isNaN(s)) return '—';
+  const m = Math.floor(s / 60);
+  const sec = Math.round(s % 60);
+  return `${m}:${sec.toString().padStart(2,'0')}`;
+}
+
+const TRAFFIC_LABELS = {
+  'YT_SEARCH': 'YouTube Search',
+  'SUGGESTED_VIDEOS': 'Suggested Videos',
+  'BROWSE_FEATURES': 'Browse / Home',
+  'EXT_URL': 'External (Google Docs, LMS)',
+  'NO_LINK_EMBEDDED': 'Embedded Player',
+  'NOTIFICATION': 'Notification',
+  'PLAYLIST': 'Playlist',
+  'YT_CHANNEL': 'Channel Page',
+  'DIRECT_OR_UNKNOWN': 'Direct / Unknown',
+  'SHORTS': 'Shorts Feed',
+  'END_SCREEN': 'End Screen',
+  'CAMPAIGN_CARD': 'Cards',
+};
+
+function renderResults(startDate, endDate) {
+  const d = analyticsData;
+
+  // ── Channel overview stats ──
+  const ov = d.overview || {};
+  const ch = d.channel || {};
+  document.getElementById('channel-stats').innerHTML = `
+    <div class="stat-cell"><div class="stat-label">Subscribers</div><div class="stat-value yellow">${fmt(ch.subscriberCount)}</div></div>
+    <div class="stat-cell"><div class="stat-label">Total Videos</div><div class="stat-value">${fmt(ch.videoCount)}</div></div>
+    <div class="stat-cell"><div class="stat-label">Views (period)</div><div class="stat-value teal">${fmt(ov.views)}</div></div>
+    <div class="stat-cell"><div class="stat-label">Watch Time</div><div class="stat-value">${fmtMins(ov.estimatedMinutesWatched)}</div></div>
+    <div class="stat-cell"><div class="stat-label">Avg View %</div><div class="stat-value green">${ov.averageViewPercentage != null ? Number(ov.averageViewPercentage).toFixed(1)+'%' : '—'}</div></div>
+    <div class="stat-cell"><div class="stat-label">Avg Duration</div><div class="stat-value">${fmtSecs(ov.averageViewDuration)}</div></div>
+    <div class="stat-cell"><div class="stat-label">Subs Gained</div><div class="stat-value green">+${fmt(ov.subscribersGained)}</div></div>
+    <div class="stat-cell"><div class="stat-label">Subs Lost</div><div class="stat-value" style="color:var(--danger)">-${fmt(ov.subscribersLost)}</div></div>
+    <div class="stat-cell"><div class="stat-label">Likes</div><div class="stat-value yellow">${fmt(ov.likes)}</div></div>
+  `;
+
+  // ── Timeline chart ──
+  const tl = d.timeline;
+  if (tl?.rows?.length > 0) {
+    const labels = tl.rows.map(r => r[0].substring(5)); // MM-DD
+    const values = tl.rows.map(r => r[1]);
+    drawLineChart('views-chart', labels, values);
+  }
+
+  // ── Top videos ──
+  const tvData = d.topVideos?.data;
+  const tvTitles = d.topVideos?.titles || {};
+  if (tvData?.rows?.length > 0) {
+    const rows = tvData.rows;
+    const tbody = document.getElementById('top-videos-body');
+    tbody.innerHTML = rows.map((r, i) => {
+      const [videoId, views, watchMins, avgDur, avgPct, rev] = r;
+      const title = tvTitles[videoId] || videoId;
+      return `<tr>
+        <td class="td-num" style="color:var(--muted)">${i+1}</td>
+        <td class="td-title">${escHtml(title)}</td>
+        <td class="td-num">${fmt(views)}</td>
+        <td class="td-num">${fmtMins(watchMins)}</td>
+        <td class="td-ctr">${avgPct != null ? Number(avgPct).toFixed(1)+'%' : '—'}</td>
+        <td class="td-rev">${fmtCurrency(rev)}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  // ── Traffic sources ──
+  const trafficRows = d.traffic?.rows || [];
+  const totalTraffic = trafficRows.reduce((s, r) => s + r[1], 0);
+  if (trafficRows.length > 0) {
+    document.getElementById('traffic-sources').innerHTML = trafficRows.map(r => {
+      const pct = totalTraffic > 0 ? ((r[1] / totalTraffic) * 100).toFixed(1) : 0;
+      const label = TRAFFIC_LABELS[r[0]] || r[0];
+      return `<div class="source-row">
+        <span class="source-label">${label}</span>
+        <div class="source-track"><div class="source-fill" style="width:${pct}%"></div></div>
+        <span class="source-pct">${pct}%</span>
+      </div>`;
+    }).join('');
+  }
+
+  // ── Geography ──
+  const geoRows = d.geo?.rows || [];
+  if (geoRows.length > 0) {
+    const COUNTRY = { US:'🇺🇸 USA', GB:'🇬🇧 UK', AU:'🇦🇺 Australia', CA:'🇨🇦 Canada', PH:'🇵🇭 Philippines', NZ:'🇳🇿 New Zealand', SG:'🇸🇬 Singapore', IN:'🇮🇳 India', MX:'🇲🇽 Mexico', IE:'🇮🇪 Ireland', ZA:'🇿🇦 South Africa', NL:'🇳🇱 Netherlands' };
+    document.getElementById('geo-body').innerHTML = geoRows.map(r => {
+      const code = r[0];
+      const name = COUNTRY[code] || code;
+      return `<tr>
+        <td>${name}</td>
+        <td class="td-num">${fmt(r[1])}</td>
+        <td class="td-num">${fmtMins(r[2])}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  // ── Revenue ──
+  const rev = d.revenue;
+  if (rev) {
+    document.getElementById('revenue-stats').innerHTML = `
+      <div class="stat-cell"><div class="stat-label">Est. Revenue</div><div class="stat-value green">${fmtCurrency(rev.estimatedRevenue)}</div></div>
+      <div class="stat-cell"><div class="stat-label">Ad Revenue</div><div class="stat-value green">${fmtCurrency(rev.estimatedAdRevenue)}</div></div>
+      <div class="stat-cell"><div class="stat-label">CPM</div><div class="stat-value yellow">${rev.cpm != null ? '$'+Number(rev.cpm).toFixed(2) : '—'}</div></div>
+      <div class="stat-cell"><div class="stat-label">Playback CPM</div><div class="stat-value yellow">${rev.playbackBasedCpm != null ? '$'+Number(rev.playbackBasedCpm).toFixed(2) : '—'}</div></div>
+      <div class="stat-cell"><div class="stat-label">Ad Impressions</div><div class="stat-value teal">${fmt(rev.adImpressions)}</div></div>
+      <div class="stat-cell"><div class="stat-label">Monetised Plays</div><div class="stat-value teal">${fmt(rev.monetizedPlaybacks)}</div></div>
+    `;
+  } else {
+    document.getElementById('revenue-stats').innerHTML = '<p style="color:var(--muted);font-size:13px;">Revenue data unavailable — check that you authorised the monetary scope during login.</p>';
+  }
+
+  // Show panels
+  document.getElementById('results-panel').classList.remove('hidden');
+
+  // Build export
+  buildExport(startDate, endDate);
+  document.getElementById('export-panel').classList.remove('hidden');
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  CHART
+// ═══════════════════════════════════════════════════════════════
+function drawLineChart(canvasId, labels, values) {
+  const canvas = document.getElementById(canvasId);
+  const ctx = canvas.getContext('2d');
+  const W = canvas.offsetWidth || 700;
+  const H = 120;
+  canvas.width  = W * window.devicePixelRatio;
+  canvas.height = H * window.devicePixelRatio;
+  ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+
+  const pad = { top: 10, right: 10, bottom: 24, left: 42 };
+  const cw = W - pad.left - pad.right;
+  const ch = H - pad.top  - pad.bottom;
+
+  const maxV = Math.max(...values, 1);
+  const minV = 0;
+
+  // Background
+  ctx.fillStyle = '#0d0f14';
+  ctx.fillRect(0, 0, W, H);
+
+  // Grid lines (3)
+  ctx.strokeStyle = '#252a38';
+  ctx.lineWidth = 0.5;
+  [0.25, 0.5, 0.75, 1].forEach(f => {
+    const y = pad.top + ch * (1 - f);
+    ctx.beginPath();
+    ctx.moveTo(pad.left, y);
+    ctx.lineTo(pad.left + cw, y);
+    ctx.stroke();
+    ctx.fillStyle = '#7a8099';
+    ctx.font = '9px monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText(fmt(maxV * f), pad.left - 4, y + 3);
+  });
+
+  // Line
+  const xStep = cw / Math.max(values.length - 1, 1);
+  const toX = i => pad.left + i * xStep;
+  const toY = v => pad.top + ch * (1 - (v - minV) / (maxV - minV));
+
+  // Fill area
+  ctx.beginPath();
+  ctx.moveTo(toX(0), toY(values[0]));
+  values.forEach((v, i) => ctx.lineTo(toX(i), toY(v)));
+  ctx.lineTo(toX(values.length - 1), pad.top + ch);
+  ctx.lineTo(toX(0), pad.top + ch);
+  ctx.closePath();
+  const grad = ctx.createLinearGradient(0, pad.top, 0, pad.top + ch);
+  grad.addColorStop(0, 'rgba(79,209,197,0.3)');
+  grad.addColorStop(1, 'rgba(79,209,197,0.02)');
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // Stroke line
+  ctx.beginPath();
+  ctx.moveTo(toX(0), toY(values[0]));
+  values.forEach((v, i) => ctx.lineTo(toX(i), toY(v)));
+  ctx.strokeStyle = '#4fd1c5';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // X axis labels (every ~7 days)
+  ctx.fillStyle = '#7a8099';
+  ctx.font = '9px monospace';
+  ctx.textAlign = 'center';
+  const step = Math.max(1, Math.floor(values.length / 8));
+  labels.forEach((l, i) => {
+    if (i % step === 0) {
+      ctx.fillText(l, toX(i), H - 6);
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  EXPORT
+// ═══════════════════════════════════════════════════════════════
+function buildExport(startDate, endDate) {
+  const d = analyticsData;
+  const ch = d.channel || {};
+  const ov = d.overview || {};
+  const rev = d.revenue || {};
+  const tvData = d.topVideos?.data;
+  const tvTitles = d.topVideos?.titles || {};
+  const geoRows = d.geo?.rows || [];
+  const trafficRows = d.traffic?.rows || [];
+
+  const totalTraffic = trafficRows.reduce((s, r) => s + r[1], 0);
+
+  let out = [];
+  out.push(`# KidsTimerCo — YouTube Analytics Export`);
+  out.push(`Generated: ${new Date().toLocaleString('en-AU')}`);
+  out.push(`Period: ${startDate} → ${endDate}`);
+  out.push(``);
+
+  out.push(`## CHANNEL`);
+  out.push(`Name: ${ch.name}`);
+  out.push(`Channel ID: ${ch.id}`);
+  out.push(`Subscribers: ${ch.subscriberCount?.toLocaleString()}`);
+  out.push(`Total videos: ${ch.videoCount}`);
+  out.push(`All-time views: ${ch.totalViewCount?.toLocaleString()}`);
+  out.push(``);
+
+  out.push(`## PERIOD OVERVIEW (${startDate} to ${endDate})`);
+  out.push(`Views: ${Math.round(ov.views || 0).toLocaleString()}`);
+  out.push(`Watch time: ${Math.round(ov.estimatedMinutesWatched || 0).toLocaleString()} minutes`);
+  out.push(`Average view duration: ${fmtSecs(ov.averageViewDuration)}`);
+  out.push(`Average view percentage: ${ov.averageViewPercentage != null ? Number(ov.averageViewPercentage).toFixed(1) + '%' : '—'}`);
+  out.push(`Subscribers gained: +${Math.round(ov.subscribersGained || 0)}`);
+  out.push(`Subscribers lost: -${Math.round(ov.subscribersLost || 0)}`);
+  out.push(`Net subscribers: ${Math.round((ov.subscribersGained || 0) - (ov.subscribersLost || 0))}`);
+  out.push(`Likes: ${Math.round(ov.likes || 0).toLocaleString()}`);
+  out.push(`Comments: ${Math.round(ov.comments || 0).toLocaleString()}`);
+  out.push(`Shares: ${Math.round(ov.shares || 0).toLocaleString()}`);
+  out.push(``);
+
+  if (rev && Object.keys(rev).length > 0) {
+    out.push(`## REVENUE`);
+    out.push(`Estimated revenue: ${fmtCurrency(rev.estimatedRevenue)}`);
+    out.push(`Ad revenue: ${fmtCurrency(rev.estimatedAdRevenue)}`);
+    out.push(`CPM: ${rev.cpm != null ? '$' + Number(rev.cpm).toFixed(2) : '—'}`);
+    out.push(`Playback CPM: ${rev.playbackBasedCpm != null ? '$' + Number(rev.playbackBasedCpm).toFixed(2) : '—'}`);
+    out.push(`Ad impressions: ${Math.round(rev.adImpressions || 0).toLocaleString()}`);
+    out.push(`Monetised playbacks: ${Math.round(rev.monetizedPlaybacks || 0).toLocaleString()}`);
+    out.push(``);
+  }
+
+  out.push(`## TOP VIDEOS`);
+  if (tvData?.rows?.length > 0) {
+    tvData.rows.forEach((r, i) => {
+      const [videoId, views, watchMins, avgDur, avgPct, vidRev] = r;
+      const title = tvTitles[videoId] || videoId;
+      out.push(`${i+1}. ${title}`);
+      out.push(`   Views: ${Math.round(views).toLocaleString()} | Watch: ${Math.round(watchMins)}min | Avg%: ${avgPct != null ? Number(avgPct).toFixed(1)+'%' : '—'} | Revenue: ${fmtCurrency(vidRev)}`);
+    });
+  }
+  out.push(``);
+
+  out.push(`## TRAFFIC SOURCES`);
+  trafficRows.forEach(r => {
+    const pct = totalTraffic > 0 ? ((r[1] / totalTraffic) * 100).toFixed(1) : 0;
+    const label = TRAFFIC_LABELS[r[0]] || r[0];
+    out.push(`${label}: ${pct}% (${Math.round(r[1]).toLocaleString()} views)`);
+  });
+  out.push(``);
+
+  out.push(`## GEOGRAPHY`);
+  const COUNTRY_NAMES = { US:'United States', GB:'United Kingdom', AU:'Australia', CA:'Canada', PH:'Philippines', NZ:'New Zealand', SG:'Singapore', IN:'India', MX:'Mexico', IE:'Ireland', ZA:'South Africa', NL:'Netherlands' };
+  geoRows.forEach(r => {
+    const name = COUNTRY_NAMES[r[0]] || r[0];
+    out.push(`${name}: ${Math.round(r[1]).toLocaleString()} views, ${Math.round(r[2]).toLocaleString()} min watch`);
+  });
+
+  document.getElementById('export-text').value = out.join('\n');
+}
+
+async function copyExport(event) {
+  const text = document.getElementById('export-text').value;
+  try {
+    await navigator.clipboard.writeText(text);
+    const btn = event.target;
+    const orig = btn.textContent;
+    btn.textContent = '✅ Copied!';
+    setTimeout(() => { btn.textContent = orig; }, 2000);
+  } catch(e) {
+    document.getElementById('export-text').select();
+    document.execCommand('copy');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════════════════════════
+function showError(msg) {
+  const el = document.getElementById('error-box');
+  el.textContent = msg;
+  el.classList.remove('hidden');
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════════════
+window.addEventListener('load', () => {
+  handleCallback(); // always attempt; sets accessToken if token present
+
+  if (accessToken) {
+    // Hide setup, show controls
+    document.getElementById('setup-panel').classList.add('hidden');
+    document.getElementById('status-bar').classList.remove('hidden');
+    document.getElementById('date-controls').classList.remove('hidden');
+
+    document.getElementById('status-text').textContent = 'Connected to YouTube';
+    document.getElementById('auth-status-header').textContent = '● Connected';
+    document.getElementById('auth-status-header').style.color = 'var(--success)';
+
+    // Restore client ID display
+    const savedId = sessionStorage.getItem('ytClientId');
+    if (savedId) {
+      document.getElementById('client-id-input').value = savedId;
+    }
+
+    // Set default date range (28 days)
+    document.getElementById('end-date').value   = daysAgo(1);
+    document.getElementById('start-date').value = daysAgo(28);
+  }
+});
+</script>
+</body>
+</html>
